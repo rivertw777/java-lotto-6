@@ -1,13 +1,16 @@
 package lotto.controller;
 
+import java.util.List;
 import lotto.domain.LottoService;
 import lotto.domain.Lottos;
+import lotto.utils.InputParser;
 import lotto.view.GameView;
 
 public class GameController {
 
     private final LottoService model;
     private final GameView view;
+    private final InputParser inputParser = new InputParser();
 
     public GameController(LottoService model, GameView view){
         this.model = model;
@@ -15,17 +18,28 @@ public class GameController {
     }
 
     public void run(){
-        int lottoPurchaseCount = getLottoPurchaseCount(view.inputLottoPurchaseAmount());
-        model.issueLottos(lottoPurchaseCount);
-        printLottos(lottoPurchaseCount, model.findAllLottos());
+        int purchaseAmount = getPurchaseAmount(view.inputLottoPurchaseAmount());
+        model.savePurchaseCount(purchaseAmount);
+
+        model.issueLottos(model.findPurchaseCount());
+        printLottos(model.findPurchaseCount(), model.findAllLottos());
+
+        List<Integer> numbers = getLottoNumbers(view.inputLottoNumbers());
+        int bonusNumber = getLottoBonusNumber(view.inputLottoBonusNumber());
+        model.saveWinningLotto(numbers, bonusNumber);
+
     }
 
-    private int getLottoPurchaseCount(String input) {
-        try {
-            return Integer.parseInt(input)/1000;
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("숫자를 입력해야 합니다.");
-        }
+    private int getPurchaseAmount(String lottPurchaseAmount) {
+        return inputParser.parseToInteger(lottPurchaseAmount);
+    }
+
+    private List<Integer> getLottoNumbers(String lottoNumbers) {
+        return inputParser.parseLottoNumbers(lottoNumbers);
+    }
+
+    private int getLottoBonusNumber(String lottoBonusNumber) {
+        return inputParser.parseToInteger(lottoBonusNumber);
     }
 
     private void printLottos(int lottoPurchaseCount, Lottos lottos) {
